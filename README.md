@@ -139,7 +139,7 @@ bash
 
 mvn spring-boot:run
 
-## Frontend
+### Frontend
 Go to frontend folder:
 
 cd frontend
