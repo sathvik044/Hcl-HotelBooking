@@ -40,7 +40,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Links */}
-        <nav style={styles.desktopNav}>
+        <nav style={styles.desktopNav} className="desktop-nav">
           <NavLink to="/" style={({ isActive }) => (isActive ? styles.activeNavLink : styles.navLink)}>Home</NavLink>
           <NavLink to="/hotels" style={({ isActive }) => (isActive ? styles.activeNavLink : styles.navLink)}>Explore Hotels</NavLink>
           
@@ -70,7 +70,7 @@ const Navbar = () => {
             <div style={styles.userSection}>
               <Link to="/profile" style={styles.profileLink} title="Edit profile">
                 <User size={18} />
-                <span style={styles.profileText}>{user.name.split(' ')[0]}</span>
+                <span style={styles.profileText} className="profile-text">{user.name.split(' ')[0]}</span>
               </Link>
               <button onClick={handleLogoutClick} style={styles.logoutBtn} title="Sign Out">
                 <LogOut size={16} />
@@ -168,9 +168,6 @@ const styles = {
   desktopNav: {
     display: 'flex',
     gap: '24px',
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
   },
   navLink: {
     fontFamily: 'var(--font-heading)',
@@ -216,9 +213,6 @@ const styles = {
     fontWeight: 600,
   },
   profileText: {
-    '@media (max-width: 480px)': {
-      display: 'none',
-    },
   },
   logoutBtn: {
     background: 'none',
@@ -304,7 +298,7 @@ if (typeof document !== 'undefined') {
   styleSheet.type = 'text/css';
   styleSheet.innerText = `
     @media (max-width: 768px) {
-      header nav {
+      header nav.desktop-nav {
         display: none !important;
       }
       header button[aria-label="Toggle menu"] {
@@ -317,6 +311,11 @@ if (typeof document !== 'undefined') {
         display: none !important;
       }
       header div[class*="userSection"] {
+        display: none !important;
+      }
+    }
+    @media (max-width: 480px) {
+      header span.profile-text {
         display: none !important;
       }
     }

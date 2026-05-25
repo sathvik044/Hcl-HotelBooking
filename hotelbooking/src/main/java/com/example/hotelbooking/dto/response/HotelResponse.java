@@ -16,4 +16,5 @@ public class HotelResponse {
     private String city;
     private String amenities;
     private Double rating;
+    private String image;
 }

@@ -22,4 +22,6 @@ public class HotelUpdateRequest {
     private String amenities;
 
     private Double rating;
+
+    private String image;
 }

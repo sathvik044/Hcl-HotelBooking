@@ -27,4 +27,6 @@ public class HotelCreateRequest {
     private String amenities;
 
     private Double rating;
+
+    private String image;
 }

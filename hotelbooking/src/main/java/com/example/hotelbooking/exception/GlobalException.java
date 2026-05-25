@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
-public class RoomBookingExceptionHandler {
+public class GlobalException {
     
     @ExceptionHandler(RoomNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -26,6 +26,44 @@ public class RoomBookingExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
             .message(ex.getMessage())
             .errorCode("ROOM_NOT_FOUND")
+            .status(HttpStatus.NOT_FOUND.value())
+            .timestamp(LocalDateTime.now())
+            .path(request.getDescription(false).replace("uri=", ""))
+            .build();
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+    
+    @ExceptionHandler(HotelNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponse> handleHotelNotFoundException(
+        HotelNotFoundException ex, 
+        WebRequest request) {
+        
+        log.error("Hotel not found exception: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .errorCode("HOTEL_NOT_FOUND")
+            .status(HttpStatus.NOT_FOUND.value())
+            .timestamp(LocalDateTime.now())
+            .path(request.getDescription(false).replace("uri=", ""))
+            .build();
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+    
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
+        UserNotFoundException ex, 
+        WebRequest request) {
+        
+        log.error("User not found exception: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .errorCode("USER_NOT_FOUND")
             .status(HttpStatus.NOT_FOUND.value())
             .timestamp(LocalDateTime.now())
             .path(request.getDescription(false).replace("uri=", ""))
@@ -72,6 +110,25 @@ public class RoomBookingExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
     
+    @ExceptionHandler(AuthException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ErrorResponse> handleAuthException(
+        AuthException ex, 
+        WebRequest request) {
+        
+        log.error("Authentication exception: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .errorCode("UNAUTHORIZED")
+            .status(HttpStatus.UNAUTHORIZED.value())
+            .timestamp(LocalDateTime.now())
+            .path(request.getDescription(false).replace("uri=", ""))
+            .build();
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+    
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -114,5 +171,23 @@ public class RoomBookingExceptionHandler {
             .build();
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(
+        Exception ex, 
+        WebRequest request) {
+        
+        log.error("Unhandled global exception: ", ex);
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred")
+            .errorCode("INTERNAL_SERVER_ERROR")
+            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            .timestamp(LocalDateTime.now())
+            .path(request.getDescription(false).replace("uri=", ""))
+            .build();
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

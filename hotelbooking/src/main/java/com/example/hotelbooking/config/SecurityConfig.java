@@ -52,6 +52,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/hotels/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rooms/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

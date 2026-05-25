@@ -37,6 +37,9 @@ public class Hotel {
 
     private Double rating;
 
+    @Column(length = 2000)
+    private String image;
+
     @Builder.Default
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Room> rooms = new ArrayList<>();

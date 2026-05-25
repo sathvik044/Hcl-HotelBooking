@@ -20,12 +20,17 @@ public class HotelMapper {
                 .city(hotel.getCity())
                 .amenities(hotel.getAmenities())
                 .rating(hotel.getRating())
+                .image(hotel.getImage() != null ? hotel.getImage() : "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80")
                 .build();
     }
 
     public static Hotel toEntity(HotelCreateRequest request) {
         if (request == null) {
             return null;
+        }
+        String requestImage = request.getImage();
+        if (requestImage == null || requestImage.trim().isEmpty()) {
+            requestImage = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
         }
         return Hotel.builder()
                 .name(request.getName())
@@ -35,6 +40,7 @@ public class HotelMapper {
                 .city(request.getCity())
                 .amenities(request.getAmenities())
                 .rating(request.getRating())
+                .image(requestImage)
                 .build();
     }
 
@@ -62,6 +68,9 @@ public class HotelMapper {
         }
         if (request.getRating() != null) {
             hotel.setRating(request.getRating());
+        }
+        if (request.getImage() != null) {
+            hotel.setImage(request.getImage());
         }
     }
 }

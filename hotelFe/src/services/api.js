@@ -23,7 +23,7 @@ api.interceptors.request.use(
 );
 
 // Flag to force mock mode if backend is not active or for testing
-const USE_MOCK_FALLBACK = true;
+const USE_MOCK_FALLBACK = false;
 
 // Initialize Mock Database in localStorage if it doesn't exist
 const initializeMockDB = () => {
@@ -225,23 +225,57 @@ initializeMockDB();
 const getMockData = () => JSON.parse(localStorage.getItem('hcl_booking_db'));
 const saveMockData = (data) => localStorage.setItem('hcl_booking_db', JSON.stringify(data));
 
+// Safely convert amenities from string to array if the backend returns it as a string
+const ensureAmenitiesAsArray = (data) => {
+  if (!data) return data;
+  
+  const parseSingle = (item) => {
+    if (item && typeof item === 'object') {
+      if (item.hasOwnProperty('amenities')) {
+        if (typeof item.amenities === 'string') {
+          item.amenities = item.amenities.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (!item.amenities) {
+          item.amenities = [];
+        }
+      }
+      // Also format rooms nested in hotels if they are returned inside hotels
+      if (item.hasOwnProperty('rooms') && Array.isArray(item.rooms)) {
+        item.rooms = item.rooms.map(room => {
+          if (room && typeof room.amenities === 'string') {
+            room.amenities = room.amenities.split(',').map(s => s.trim()).filter(Boolean);
+          } else if (room && !room.amenities) {
+            room.amenities = [];
+          }
+          return room;
+        });
+      }
+    }
+    return item;
+  };
+
+  if (Array.isArray(data)) {
+    return data.map(parseSingle);
+  }
+  return parseSingle(data);
+};
+
 // State Helper: check if backend is running by attempting to ping, else fallback.
 // In actual use, we wrap each service function in a try-catch. If it fails due to network, we perform mock operations.
 const handleServiceCall = async (apiCall, mockHandler) => {
   if (USE_MOCK_FALLBACK) {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(mockHandler());
+        resolve(ensureAmenitiesAsArray(mockHandler()));
       }, 350); // Simulate network latency
     });
   }
 
   try {
     const response = await apiCall();
-    return response.data;
+    return ensureAmenitiesAsArray(response.data);
   } catch (error) {
     console.warn('API call failed, falling back to LocalStorage Mock DB:', error);
-    return mockHandler();
+    return ensureAmenitiesAsArray(mockHandler());
   }
 };
 
@@ -251,8 +285,26 @@ const handleServiceCall = async (apiCall, mockHandler) => {
 
 export const authService = {
   register: async (userData) => {
+    const backendData = {
+      username: userData.name,
+      email: userData.email,
+      password: userData.password
+    };
+
+    const performRealApi = async () => {
+      const authRes = await api.post('/auth/register', backendData);
+      const token = authRes.data.token;
+      localStorage.setItem('hcl_auth_token', token);
+      
+      // Fetch user profile immediately using the newly acquired token
+      const userRes = await api.get('/users/me');
+      localStorage.setItem('hcl_current_user', JSON.stringify(userRes.data));
+      
+      return { data: { token, user: userRes.data } };
+    };
+
     return handleServiceCall(
-      () => api.post('/auth/register', userData),
+      performRealApi,
       () => {
         const db = getMockData();
         const emailExists = db.users.some(u => u.email.toLowerCase() === userData.email.toLowerCase());
@@ -284,8 +336,25 @@ export const authService = {
   },
 
   login: async (credentials) => {
+    const backendData = {
+      username: credentials.email,
+      password: credentials.password
+    };
+
+    const performRealApi = async () => {
+      const authRes = await api.post('/auth/login', backendData);
+      const token = authRes.data.token;
+      localStorage.setItem('hcl_auth_token', token);
+      
+      // Fetch user profile immediately using the newly acquired token
+      const userRes = await api.get('/users/me');
+      localStorage.setItem('hcl_current_user', JSON.stringify(userRes.data));
+      
+      return { data: { token, user: userRes.data } };
+    };
+
     return handleServiceCall(
-      () => api.post('/auth/login', credentials),
+      performRealApi,
       () => {
         const db = getMockData();
         const user = db.users.find(
@@ -470,8 +539,18 @@ export const roomService = {
 
 export const bookingService = {
   create: async (bookingData) => {
+    const backendData = {
+      userId: bookingData.userId,
+      roomId: bookingData.roomId,
+      hotelId: bookingData.hotelId,
+      checkInDate: bookingData.checkIn,
+      checkOutDate: bookingData.checkOut,
+      numberOfRooms: bookingData.numberOfRooms || 1,
+      numberOfGuests: bookingData.guests || 1,
+      specialRequests: bookingData.specialRequests || ""
+    };
     return handleServiceCall(
-      () => api.post('/bookings', bookingData),
+      () => api.post('/bookings', backendData),
       () => {
         const db = getMockData();
         
@@ -644,8 +723,18 @@ export const adminService = {
 
   // POST /api/admin/hotels
   createHotel: async (hotelData) => {
+    const backendData = {
+      name: hotelData.name,
+      description: hotelData.description,
+      location: hotelData.location,
+      address: hotelData.address || hotelData.location || "Default Address",
+      city: hotelData.city || (hotelData.location ? hotelData.location.split(',')[0] : "Default City"),
+      amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities.join(', ') : hotelData.amenities || "",
+      rating: parseFloat(hotelData.rating || 5.0),
+      image: hotelData.image || undefined
+    };
     return handleServiceCall(
-      () => api.post('/admin/hotels', hotelData),
+      () => api.post('/admin/hotels', backendData),
       () => {
         const db = getMockData();
         const newHotel = {
@@ -667,8 +756,18 @@ export const adminService = {
 
   // PUT /api/admin/hotels/{id}
   updateHotel: async (id, hotelData) => {
+    const backendData = {
+      name: hotelData.name,
+      description: hotelData.description,
+      location: hotelData.location,
+      address: hotelData.address || (hotelData.location ? hotelData.location : undefined),
+      city: hotelData.city || (hotelData.location ? hotelData.location.split(',')[0] : undefined),
+      amenities: Array.isArray(hotelData.amenities) ? hotelData.amenities.join(', ') : hotelData.amenities,
+      rating: hotelData.rating ? parseFloat(hotelData.rating) : undefined,
+      image: hotelData.image || undefined
+    };
     return handleServiceCall(
-      () => api.put(`/admin/hotels/${id}`, hotelData),
+      () => api.put(`/admin/hotels/${id}`, backendData),
       () => {
         const db = getMockData();
         const index = db.hotels.findIndex(h => h.id === id);
@@ -702,8 +801,17 @@ export const adminService = {
 
   // POST /api/admin/rooms
   createRoom: async (roomData) => {
+    const backendData = {
+      hotelId: roomData.hotelId,
+      roomType: (roomData.type || roomData.name || "DELUXE").toUpperCase(),
+      capacity: parseInt(roomData.capacity, 10) || 2,
+      pricePerNight: parseFloat(roomData.price),
+      description: roomData.description || roomData.name || "",
+      amenities: Array.isArray(roomData.amenities) ? roomData.amenities.join(', ') : roomData.amenities || "",
+      totalRooms: parseInt(roomData.totalRooms, 10) || 10
+    };
     return handleServiceCall(
-      () => api.post('/admin/rooms', roomData),
+      () => api.post('/admin/rooms', backendData),
       () => {
         const db = getMockData();
         const newRoom = {
@@ -727,8 +835,18 @@ export const adminService = {
 
   // PUT /api/admin/rooms/{id}
   updateRoom: async (id, roomData) => {
+    const backendData = {
+      roomType: roomData.type || roomData.name ? (roomData.type || roomData.name).toUpperCase() : undefined,
+      capacity: roomData.capacity ? parseInt(roomData.capacity, 10) : undefined,
+      pricePerNight: roomData.price ? parseFloat(roomData.price) : undefined,
+      description: roomData.description,
+      amenities: Array.isArray(roomData.amenities) ? roomData.amenities.join(', ') : roomData.amenities,
+      totalRooms: roomData.totalRooms ? parseInt(roomData.totalRooms, 10) : undefined,
+      availableRooms: roomData.availableRooms ? parseInt(roomData.availableRooms, 10) : undefined,
+      isActive: roomData.isActive !== undefined ? roomData.isActive : undefined
+    };
     return handleServiceCall(
-      () => api.put(`/admin/rooms/${id}`, roomData),
+      () => api.put(`/admin/rooms/${id}`, backendData),
       () => {
         const db = getMockData();
         const index = db.rooms.findIndex(r => r.id === id);
