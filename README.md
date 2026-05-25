@@ -57,7 +57,7 @@ This project follows a layered architecture:
 
 Request Flow:
 
-`Client -> Controller -> Service -> Repository -> Database`
+`Client -> Controller ->Dto -> Service -> Repository -> Database`
 
 ----
 
