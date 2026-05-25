@@ -4,10 +4,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -16,14 +18,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.debug("Attempting to load user by username: {}", username);
         UserDetails user = users.get(username);
         if (user == null) {
+            log.warn("User not found in memory: {}", username);
             throw new UsernameNotFoundException("User not found: " + username);
         }
+        log.debug("Successfully loaded user: {}", username);
         return user;
     }
 
     public void saveUser(UserDetails userDetails) {
+        log.debug("Saving user to memory: {}", userDetails.getUsername());
         users.put(userDetails.getUsername(), userDetails);
     }
 

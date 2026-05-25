@@ -8,17 +8,22 @@ import com.example.hotelbooking.security.CustomUserDetailsService;
 import com.example.hotelbooking.security.JwtUtil;
 import com.example.hotelbooking.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -29,13 +34,16 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
+        log.info("Processing registration request for user: {}", request.getUsername());
+
         if (userDetailsService.userExists(request.getUsername())) {
+            log.warn("Registration failed: Username '{}' already exists", request.getUsername());
             throw new AuthException("Username already exists");
         }
 
-        // Creating a temporary in-memory UserDetails object.
-        // Once the User entity is ready, this should be changed to save the User entity to the DB.
+        // TODO: Map request.getEmail() to the actual User entity once it is created by the team.
         UserDetails user = new User(
                 request.getUsername(),
                 passwordEncoder.encode(request.getPassword()),
@@ -43,9 +51,9 @@ public class AuthServiceImpl implements AuthService {
         );
 
         userDetailsService.saveUser(user);
-        
+        log.info("User '{}' registered successfully", request.getUsername());
+
         String jwtToken = jwtUtil.generateToken(user);
-        
         return AuthResponse.builder()
                 .token(jwtToken)
                 .message("User registered successfully")
@@ -54,29 +62,39 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        log.info("Processing login request for user: {}", request.getUsername());
+
         try {
-            authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
                             request.getPassword()
                     )
             );
-        } catch (AuthenticationException e) {
-            throw new AuthException("Invalid username or password");
-        }
+            
+            // Using the authenticated principal is safer and avoids a redundant database lookup
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String jwtToken = jwtUtil.generateToken(userDetails);
+            
+            log.info("User '{}' logged in successfully", request.getUsername());
+            
+            return AuthResponse.builder()
+                    .token(jwtToken)
+                    .message("Login successful")
+                    .build();
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        String jwtToken = jwtUtil.generateToken(userDetails);
-        
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .message("Login successful")
-                .build();
+        } catch (BadCredentialsException e) {
+            log.warn("Login failed for user '{}': Bad credentials", request.getUsername());
+            throw new AuthException("Invalid username or password");
+        } catch (AuthenticationException e) {
+            log.error("Authentication failed for user '{}': {}", request.getUsername(), e.getMessage());
+            throw new AuthException("Authentication failed");
+        }
     }
 
     @Override
     public void logout(String token) {
-        // In a stateless JWT setup, logout is typically handled client-side by deleting the token.
-        // For enhanced security, a token blacklist could be implemented here.
+        log.info("Processing logout request for token starting with: {}", 
+                (token != null && token.length() > 10) ? token.substring(0, 10) + "..." : "Invalid/Empty Token");
     }
 }
