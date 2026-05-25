@@ -47,4 +47,35 @@ public class RoomMapper {
             .isActive(true)
             .build();
     }
+
+    public void updateEntity(com.example.hotelbooking.dto.request.RoomUpdateRequest request, Room room) {
+        if (request == null || room == null) {
+            return;
+        }
+        
+        if (request.getRoomType() != null) {
+            room.setRoomType(RoomType.valueOf(request.getRoomType().toUpperCase()));
+        }
+        if (request.getCapacity() != null) {
+            room.setCapacity(request.getCapacity());
+        }
+        if (request.getPricePerNight() != null) {
+            room.setPricePerNight(request.getPricePerNight());
+        }
+        if (request.getDescription() != null) {
+            room.setDescription(request.getDescription());
+        }
+        if (request.getAmenities() != null) {
+            room.setAmenities(request.getAmenities());
+        }
+        if (request.getTotalRooms() != null) {
+            room.setTotalRooms(request.getTotalRooms());
+        }
+        if (request.getAvailableRooms() != null) {
+            room.setAvailableRooms(request.getAvailableRooms());
+        }
+        if (request.getIsActive() != null) {
+            room.setIsActive(request.getIsActive());
+        }
+    }
 }

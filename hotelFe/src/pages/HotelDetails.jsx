@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { hotelService, roomService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import RoomCard from '../components/RoomCard';
 import Loader from '../components/Loader';
 import { Star, MapPin, Coffee, ShieldAlert, Sparkles, Map } from 'lucide-react';
@@ -11,6 +12,7 @@ const HotelDetails = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { showAlert } = useAuth();
 
   // Selected booking dates helper (prepopulate with tomorrow / day-after)
   const getTodayString = (offset = 0) => {
@@ -34,6 +36,7 @@ const HotelDetails = () => {
         setRooms(roomData);
       } catch (err) {
         console.error('Failed to fetch hotel details:', err);
+        showAlert(err.message || 'Failed to load hotel details. Please try again.', 'error');
       } finally {
         setLoading(false);
       }

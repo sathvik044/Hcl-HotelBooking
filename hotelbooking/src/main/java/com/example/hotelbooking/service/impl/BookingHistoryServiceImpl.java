@@ -6,6 +6,7 @@ import com.example.hotelbooking.entity.BookingHistory;
 import com.example.hotelbooking.repository.BookingHistoryRepository;
 import com.example.hotelbooking.repository.BookingRepository;
 import com.example.hotelbooking.service.BookingHistoryService;
+import com.example.hotelbooking.mapper.BookingHistoryMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class BookingHistoryServiceImpl implements BookingHistoryService {
     
     private final BookingHistoryRepository bookingHistoryRepository;
     private final BookingRepository bookingRepository;
+    private final BookingHistoryMapper bookingHistoryMapper;
     
     @Override
     @Transactional
@@ -35,20 +37,11 @@ public class BookingHistoryServiceImpl implements BookingHistoryService {
             return;
         }
         
-        BookingHistory history = BookingHistory.builder()
-            .bookingId(bookingId)
-            .userId(userId)
-            .roomId(roomId)
-            .hotelId(hotelId)
-            .checkInDate(booking.getCheckInDate())
-            .checkOutDate(booking.getCheckOutDate())
-            .numberOfRooms(booking.getNumberOfRooms())
-            .numberOfGuests(booking.getNumberOfGuests())
-            .totalPrice(booking.getTotalPrice())
-            .status(BookingHistory.HistoryStatus.BOOKED)
-            .actionDate(LocalDateTime.now())
-            .remarks("Booking confirmed")
-            .build();
+        BookingHistory history = bookingHistoryMapper.toEntity(
+            booking, 
+            BookingHistory.HistoryStatus.BOOKED, 
+            "Booking confirmed"
+        );
         
         bookingHistoryRepository.save(history);
         log.info("Booking recorded in history with id: {}", bookingId);
@@ -67,20 +60,11 @@ public class BookingHistoryServiceImpl implements BookingHistoryService {
             return;
         }
         
-        BookingHistory history = BookingHistory.builder()
-            .bookingId(bookingId)
-            .userId(userId)
-            .roomId(booking.getRoomId())
-            .hotelId(booking.getHotelId())
-            .checkInDate(booking.getCheckInDate())
-            .checkOutDate(booking.getCheckOutDate())
-            .numberOfRooms(booking.getNumberOfRooms())
-            .numberOfGuests(booking.getNumberOfGuests())
-            .totalPrice(booking.getTotalPrice())
-            .status(BookingHistory.HistoryStatus.CANCELLED)
-            .actionDate(LocalDateTime.now())
-            .remarks("Booking cancelled")
-            .build();
+        BookingHistory history = bookingHistoryMapper.toEntity(
+            booking, 
+            BookingHistory.HistoryStatus.CANCELLED, 
+            "Booking cancelled"
+        );
         
         bookingHistoryRepository.save(history);
         log.info("Cancellation recorded in history for bookingId: {}", bookingId);
@@ -99,20 +83,11 @@ public class BookingHistoryServiceImpl implements BookingHistoryService {
             return;
         }
         
-        BookingHistory history = BookingHistory.builder()
-            .bookingId(bookingId)
-            .userId(userId)
-            .roomId(booking.getRoomId())
-            .hotelId(booking.getHotelId())
-            .checkInDate(booking.getCheckInDate())
-            .checkOutDate(booking.getCheckOutDate())
-            .numberOfRooms(booking.getNumberOfRooms())
-            .numberOfGuests(booking.getNumberOfGuests())
-            .totalPrice(booking.getTotalPrice())
-            .status(BookingHistory.HistoryStatus.COMPLETED)
-            .actionDate(LocalDateTime.now())
-            .remarks("Booking completed")
-            .build();
+        BookingHistory history = bookingHistoryMapper.toEntity(
+            booking, 
+            BookingHistory.HistoryStatus.COMPLETED, 
+            "Booking completed"
+        );
         
         bookingHistoryRepository.save(history);
         log.info("Completion recorded in history for bookingId: {}", bookingId);
@@ -124,7 +99,7 @@ public class BookingHistoryServiceImpl implements BookingHistoryService {
         
         return bookingHistoryRepository.findByUserIdOrderByCreatedAtDesc(userId)
             .stream()
-            .map(this::mapToResponse)
+            .map(bookingHistoryMapper::toResponse)
             .collect(Collectors.toList());
     }
     
@@ -134,26 +109,7 @@ public class BookingHistoryServiceImpl implements BookingHistoryService {
         
         return bookingHistoryRepository.findByBookingId(bookingId)
             .stream()
-            .map(this::mapToResponse)
+            .map(bookingHistoryMapper::toResponse)
             .collect(Collectors.toList());
-    }
-    
-    private BookingHistoryResponse mapToResponse(BookingHistory history) {
-        return BookingHistoryResponse.builder()
-            .id(history.getId())
-            .bookingId(history.getBookingId())
-            .userId(history.getUserId())
-            .roomId(history.getRoomId())
-            .hotelId(history.getHotelId())
-            .checkInDate(history.getCheckInDate())
-            .checkOutDate(history.getCheckOutDate())
-            .numberOfRooms(history.getNumberOfRooms())
-            .numberOfGuests(history.getNumberOfGuests())
-            .totalPrice(history.getTotalPrice())
-            .status(history.getStatus().toString())
-            .actionDate(history.getActionDate())
-            .remarks(history.getRemarks())
-            .createdAt(history.getCreatedAt())
-            .build();
     }
 }

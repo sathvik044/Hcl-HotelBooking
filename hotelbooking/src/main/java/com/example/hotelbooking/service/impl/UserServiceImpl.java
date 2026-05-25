@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -32,7 +33,7 @@ public class UserServiceImpl implements UserService {
                     log.warn("User profile retrieval failed. Email: {} not found", email);
                     return new UserNotFoundException("User with email " + email + " not found");
                 });
-        return UserMapper.toResponse(user);
+        return userMapper.toResponse(user);
     }
 
     @Override
@@ -44,10 +45,10 @@ public class UserServiceImpl implements UserService {
                     return new UserNotFoundException("User with ID " + id + " not found");
                 });
 
-        UserMapper.updateEntity(request, user);
+        userMapper.updateEntity(request, user);
         User updatedUser = userRepository.save(user);
         log.info("Successfully updated user profile for user ID: {}", id);
-        return UserMapper.toResponse(updatedUser);
+        return userMapper.toResponse(updatedUser);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> getAllUsers() {
         log.info("Retrieving all registered users (Admin action)");
         return userRepository.findAll().stream()
-                .map(UserMapper::toResponse)
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -68,7 +69,7 @@ public class UserServiceImpl implements UserService {
                     log.warn("User retrieval failed. ID: {} not found", id);
                     return new UserNotFoundException("User with ID " + id + " not found");
                 });
-        return UserMapper.toResponse(user);
+        return userMapper.toResponse(user);
     }
 
     @Override
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserService {
         user.setBlocked(true);
         User savedUser = userRepository.save(user);
         log.info("Successfully blocked user ID: {}", id);
-        return UserMapper.toResponse(savedUser);
+        return userMapper.toResponse(savedUser);
     }
 
     @Override
@@ -98,6 +99,6 @@ public class UserServiceImpl implements UserService {
         user.setBlocked(false);
         User savedUser = userRepository.save(user);
         log.info("Successfully unblocked user ID: {}", id);
-        return UserMapper.toResponse(savedUser);
+        return userMapper.toResponse(savedUser);
     }
 }

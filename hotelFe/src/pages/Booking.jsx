@@ -15,6 +15,7 @@ const Booking = () => {
   const [loading, setLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [newBookingId, setNewBookingId] = useState('');
+  const [bookingError, setBookingError] = useState(null);
 
   // Extract stay parameters
   const hotelId = searchParams.get('hotelId');
@@ -102,6 +103,7 @@ const Booking = () => {
     if (!validateForm()) return;
 
     setPayLoading(true);
+    setBookingError(null);
     try {
       const bookingData = {
         userId: user.id,
@@ -119,6 +121,7 @@ const Booking = () => {
       setIsSuccess(true);
       showAlert('Stay successfully booked and confirmed!', 'success');
     } catch (err) {
+      setBookingError(err.message || 'Room is not available for the selected dates');
       showAlert(err.message || 'Payment processing failed.', 'error');
     } finally {
       setPayLoading(false);
@@ -182,6 +185,22 @@ const Booking = () => {
       <div style={styles.mainLayout}>
         {/* Left Column: Guest info and payment form */}
         <div style={styles.formCol}>
+          {bookingError && (
+            <div style={styles.errorBannerCard} className="card-glass animate-slide-up">
+              <div style={styles.errorBannerHeader}>
+                <ShieldAlert size={28} color="var(--danger)" />
+                <h3 style={styles.errorBannerTitle}>Room Unavailable</h3>
+              </div>
+              <p style={styles.errorBannerText}>
+                {bookingError}
+              </p>
+              <div style={styles.errorBannerActions}>
+                <Link to={`/hotels/${hotel.id}`} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                  Select Different Dates or Room
+                </Link>
+              </div>
+            </div>
+          )}
           <form onSubmit={handlePaySubmit}>
             {/* 1. Guest info card */}
             <div style={styles.cardBlock} className="card-glass">
@@ -570,6 +589,40 @@ const styles = {
     fontWeight: 600,
     fontSize: '0.95rem',
     color: 'var(--text-muted)',
+  },
+  errorBannerCard: {
+    padding: '24px',
+    borderRadius: '16px',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    boxShadow: '0 8px 32px 0 rgba(239, 68, 68, 0.1)',
+    marginBottom: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    textAlign: 'left',
+  },
+  errorBannerHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  errorBannerTitle: {
+    fontSize: '1.2rem',
+    fontWeight: 700,
+    color: 'var(--danger)',
+    margin: 0,
+  },
+  errorBannerText: {
+    fontSize: '0.95rem',
+    color: 'var(--text-main)',
+    margin: 0,
+    lineHeight: 1.5,
+  },
+  errorBannerActions: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '4px',
   },
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { roomService, hotelService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
 import { Users, ShieldCheck, ArrowLeft, Heart, Sparkles, Check } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const RoomDetails = () => {
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { showAlert } = useAuth();
 
   // Selected date parameters from search url
   const checkIn = searchParams.get('checkIn') || new Date().toISOString().split('T')[0];
@@ -28,6 +30,7 @@ const RoomDetails = () => {
         setHotel(hotelData);
       } catch (err) {
         console.error('Failed to fetch room details:', err);
+        showAlert(err.message || 'Failed to load room details. Please try again.', 'error');
       } finally {
         setLoading(false);
       }
