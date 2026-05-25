@@ -24,6 +24,10 @@ public class Room {
     @Column(nullable = false)
     private Long hotelId;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotelId", referencedColumnName = "id", insertable = false, updatable = false)
+    private Hotel hotel;
+    
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private RoomType roomType;

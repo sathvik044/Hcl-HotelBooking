@@ -45,9 +45,5 @@ public class HotelController {
         return ResponseEntity.ok(results);
     }
 
-    @ExceptionHandler(HotelNotFoundException.class)
-    public ResponseEntity<String> handleHotelNotFound(HotelNotFoundException ex) {
-        log.warn("HotelController Local ExceptionHandler caught: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
+   
 }

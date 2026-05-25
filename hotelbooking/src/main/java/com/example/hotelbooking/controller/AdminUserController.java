@@ -47,9 +47,5 @@ public class AdminUserController {
         return ResponseEntity.ok(response);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
-        log.warn("AdminUserController Local ExceptionHandler caught: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
+   
 }
