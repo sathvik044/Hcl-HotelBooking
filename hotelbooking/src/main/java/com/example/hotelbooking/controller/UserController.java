@@ -9,11 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,41 +21,30 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * GET /api/users/me
+     * Returns the profile of the currently authenticated user.
+     * Spring Security injects the logged-in UserDetails via @AuthenticationPrincipal.
+     */
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getMe(Principal principal) {
-        log.info("GET /api/users/me invoked");
-        String email = null;
-
-        if (principal != null) {
-            email = principal.getName();
-        } else {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-                email = auth.getName();
-            }
-        }
-
-        if (email == null) {
-            log.warn("GET /api/users/me called but no authenticated session found");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        UserResponse userResponse = userService.getCurrentUser(email);
+    public ResponseEntity<UserResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
+        log.info("GET /api/users/me invoked for user: {}", userDetails.getUsername());
+        UserResponse userResponse = userService.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(userResponse);
     }
 
+    /**
+     * PUT /api/users/{id}
+     * Updates the profile of the user identified by the given ID.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateRequest request) {
-        log.info("PUT /api/users/{} invoked with update request", id);
+        log.info("PUT /api/users/{} invoked", id);
         UserResponse response = userService.updateUser(id, request);
         return ResponseEntity.ok(response);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
-        log.warn("Local ExceptionHandler caught: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
+    
 }
