@@ -29,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final com.example.hotelbooking.service.EmailService emailService;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -62,6 +63,15 @@ public class AuthServiceImpl implements AuthService {
         userDetailsService.saveUser(userDetails);
         
         String jwtToken = jwtUtil.generateToken(userDetails);
+        
+        // Trigger welcome email automatically in a background thread to prevent SMTP blocking
+        try {
+            new Thread(() -> emailService.sendWelcomeEmail(userEntity.getEmail(), userEntity.getName())).start();
+        } catch (Exception e) {
+            // Log warning but don't fail registration
+            org.slf4j.LoggerFactory.getLogger(AuthServiceImpl.class)
+                .warn("Could not dispatch welcome email thread: {}", e.getMessage());
+        }
         
         return AuthResponse.builder()
                 .token(jwtToken)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminService, hotelService } from '../services/api';
+import { adminService, hotelService, roomService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
 import { BarChart3, Users, Hotel, CreditCard, ShieldAlert, Plus, Edit2, Trash2, CheckCircle, Ban, X, Sparkles } from 'lucide-react';
@@ -30,7 +30,7 @@ const AdminDashboard = () => {
   const [currentRoom, setCurrentRoom] = useState(null); // null for Add, room object for Edit
   const [roomHotelId, setRoomHotelId] = useState('');
   const [roomName, setRoomName] = useState('');
-  const [roomType, setRoomType] = useState('Deluxe Suite');
+  const [roomType, setRoomType] = useState('DELUXE');
   const [roomPrice, setRoomPrice] = useState('');
   const [roomCapacity, setRoomCapacity] = useState('2');
   const [roomImage, setRoomImage] = useState('');
@@ -52,9 +52,18 @@ const AdminDashboard = () => {
       // Sort bookings descending by creation date
       setBookingsList(bList.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
 
-      // Extract all rooms from DB helper (stored in localStorage list directly)
-      const db = JSON.parse(localStorage.getItem('hcl_booking_db'));
-      setRoomsList(db?.rooms || []);
+      // Fetch all rooms dynamically from the backend for each hotel
+      try {
+        const roomsPromises = hList.map(hotel => roomService.getByHotelId(hotel.id));
+        const roomsResults = await Promise.all(roomsPromises);
+        const combinedRooms = roomsResults.flat();
+        setRoomsList(combinedRooms);
+      } catch (roomErr) {
+        console.warn('Could not fetch active rooms dynamically from backend:', roomErr);
+        // Fallback to localStorage mock rooms
+        const db = JSON.parse(localStorage.getItem('hcl_booking_db'));
+        setRoomsList(db?.rooms || []);
+      }
       
       // Default parent hotel selector to first hotel
       if (hList.length > 0) setRoomHotelId(hList[0].id);
@@ -161,7 +170,7 @@ const AdminDashboard = () => {
   const openAddRoom = () => {
     setCurrentRoom(null);
     setRoomName('');
-    setRoomType('Deluxe Suite');
+    setRoomType('DELUXE');
     setRoomPrice('');
     setRoomCapacity('2');
     setRoomImage('');
@@ -567,7 +576,12 @@ const AdminDashboard = () => {
                     </div>
                     <div className="form-group">
                       <label className="form-label">Room Type</label>
-                      <input type="text" value={roomType} onChange={(e) => setRoomType(e.target.value)} className="form-input" placeholder="e.g. Suite" required />
+                      <select value={roomType} onChange={(e) => setRoomType(e.target.value)} className="form-input" style={{ cursor: 'pointer' }} required>
+                        <option value="SINGLE">SINGLE</option>
+                        <option value="DOUBLE">DOUBLE</option>
+                        <option value="SUITE">SUITE</option>
+                        <option value="DELUXE">DELUXE</option>
+                      </select>
                     </div>
                     <div className="form-group" style={{ gridColumn: '1 / span 2' }}>
                       <label className="form-label">Room Image URL</label>

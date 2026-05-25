@@ -225,12 +225,13 @@ initializeMockDB();
 const getMockData = () => JSON.parse(localStorage.getItem('hcl_booking_db'));
 const saveMockData = (data) => localStorage.setItem('hcl_booking_db', JSON.stringify(data));
 
-// Safely convert amenities from string to array if the backend returns it as a string
+// Safely convert amenities from string to array and map Room DTO properties centrally
 const ensureAmenitiesAsArray = (data) => {
   if (!data) return data;
   
   const parseSingle = (item) => {
     if (item && typeof item === 'object') {
+      // 1. Format Amenities if present
       if (item.hasOwnProperty('amenities')) {
         if (typeof item.amenities === 'string') {
           item.amenities = item.amenities.split(',').map(s => s.trim()).filter(Boolean);
@@ -238,13 +239,52 @@ const ensureAmenitiesAsArray = (data) => {
           item.amenities = [];
         }
       }
-      // Also format rooms nested in hotels if they are returned inside hotels
+      
+      // 2. Map Room DTO properties to frontend component expectations
+      if (item.hasOwnProperty('roomType') || item.hasOwnProperty('pricePerNight')) {
+        if (item.roomType && !item.type) {
+          item.type = item.roomType;
+        }
+        if (!item.name) {
+          const rawType = item.roomType || 'DELUXE';
+          item.name = rawType.charAt(0).toUpperCase() + rawType.slice(1).toLowerCase() + " Room";
+        }
+        if (item.pricePerNight !== undefined && item.price === undefined) {
+          item.price = item.pricePerNight;
+        }
+        if (item.availableRooms !== undefined && item.available === undefined) {
+          item.available = item.availableRooms > 0;
+        }
+        if (!item.image) {
+          item.image = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+        }
+      }
+
+      // 3. Also format rooms nested in hotels if they are returned inside hotels
       if (item.hasOwnProperty('rooms') && Array.isArray(item.rooms)) {
         item.rooms = item.rooms.map(room => {
-          if (room && typeof room.amenities === 'string') {
-            room.amenities = room.amenities.split(',').map(s => s.trim()).filter(Boolean);
-          } else if (room && !room.amenities) {
-            room.amenities = [];
+          if (room && typeof room === 'object') {
+            if (typeof room.amenities === 'string') {
+              room.amenities = room.amenities.split(',').map(s => s.trim()).filter(Boolean);
+            } else if (!room.amenities) {
+              room.amenities = [];
+            }
+            if (room.roomType && !room.type) {
+              room.type = room.roomType;
+            }
+            if (!room.name) {
+              const rawType = room.roomType || 'DELUXE';
+              room.name = rawType.charAt(0).toUpperCase() + rawType.slice(1).toLowerCase() + " Room";
+            }
+            if (room.pricePerNight !== undefined && room.price === undefined) {
+              room.price = room.pricePerNight;
+            }
+            if (room.availableRooms !== undefined && room.available === undefined) {
+              room.available = room.availableRooms > 0;
+            }
+            if (!room.image) {
+              room.image = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80';
+            }
           }
           return room;
         });

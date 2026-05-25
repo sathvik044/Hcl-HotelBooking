@@ -92,12 +92,6 @@ const Booking = () => {
     const errors = {};
     if (!guestName.trim()) errors.name = 'Full name is required';
     if (!guestPhone.trim()) errors.phone = 'Phone number is required';
-    
-    // Card validators
-    const cleanCard = cardNumber.replace(/\s/g, '');
-    if (cleanCard.length < 16) errors.cardNum = 'Card number must be 16 digits';
-    if (cardExpiry.length < 5) errors.expiry = 'Expiry is required (MM/YY)';
-    if (cardCvv.length < 3) errors.cvv = 'CVV must be 3 digits';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -234,89 +228,20 @@ const Booking = () => {
               </div>
             </div>
 
-            {/* 2. Interactive Credit Card payment */}
+            {/* 2. Direct Booking Confirmation (Payment Disabled) */}
             <div style={styles.cardBlock} className="card-glass" style={{ ...styles.cardBlock, marginTop: '30px' }}>
-              <h3 style={styles.blockTitle}>2. Secure Booking Payment</h3>
+              <h3 style={styles.blockTitle}>2. Finalize Reservation</h3>
               
-              {/* Credit Card Mockup */}
-              <div style={styles.ccMockup} className="animate-fade-in">
-                <div style={styles.ccHeader}>
-                  <CreditCard size={32} color="white" />
-                  <span style={styles.ccBrand}>HCL PLATINUM</span>
-                </div>
-                <div style={styles.ccNumber}>
-                  {cardNumber || '•••• •••• •••• ••••'}
-                </div>
-                <div style={styles.ccFooter}>
-                  <div style={styles.ccHolderGroup}>
-                    <span style={styles.ccLabel}>Cardholder</span>
-                    <span style={styles.ccVal}>{cardHolder.toUpperCase() || 'YOUR NAME'}</span>
-                  </div>
-                  <div style={styles.ccExpiryGroup}>
-                    <span style={styles.ccLabel}>Expires</span>
-                    <span style={styles.ccVal}>{cardExpiry || 'MM/YY'}</span>
-                  </div>
-                </div>
+              <div style={styles.guaranteeCard} style={{ ...styles.guaranteeCard, marginTop: 0, marginBottom: '24px', borderStyle: 'solid' }}>
+                <ShieldCheck size={20} color="var(--success)" />
+                <span style={{ ...styles.guaranteeText, color: 'var(--text-heading)', fontWeight: 600 }}>
+                  Direct Booking Active: Online card authorization has been bypassed. You can secure this reservation instantly!
+                </span>
               </div>
 
-              {/* CC inputs */}
-              <div style={styles.ccFormGrid}>
-                <div className="form-group" style={{ gridColumn: '1 / span 2' }}>
-                  <label className="form-label">Credit Card Number</label>
-                  <input
-                    type="text"
-                    placeholder="4000 1234 5678 9010"
-                    value={cardNumber}
-                    onChange={handleCardNumberChange}
-                    className="form-input"
-                    style={{ borderColor: formErrors.cardNum ? 'var(--danger)' : 'var(--border-color)' }}
-                    required
-                  />
-                  {formErrors.cardNum && <span className="form-error">{formErrors.cardNum}</span>}
-                </div>
-
-                <div className="form-group" style={{ gridColumn: '1 / span 2' }}>
-                  <label className="form-label">Cardholder Name</label>
-                  <input
-                    type="text"
-                    placeholder="Sarah Jenkins"
-                    value={cardHolder}
-                    onChange={(e) => setCardHolder(e.target.value)}
-                    className="form-input"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Expiration Date</label>
-                  <input
-                    type="text"
-                    placeholder="MM/YY"
-                    value={cardExpiry}
-                    onChange={handleExpiryChange}
-                    className="form-input"
-                    style={{ borderColor: formErrors.expiry ? 'var(--danger)' : 'var(--border-color)' }}
-                    required
-                  />
-                  {formErrors.expiry && <span className="form-error">{formErrors.expiry}</span>}
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">CVV Code</label>
-                  <input
-                    type="password"
-                    placeholder="123"
-                    value={cardCvv}
-                    onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').substring(0, 3))}
-                    className="form-input"
-                    style={{ borderColor: formErrors.cvv ? 'var(--danger)' : 'var(--border-color)' }}
-                    required
-                  />
-                  {formErrors.cvv && <span className="form-error">{formErrors.cvv}</span>}
-                </div>
-              </div>
-
-              <div style={styles.divider}></div>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '24px' }}>
+                By finalizing this reservation, you agree to the check-in policies and house rules of the resort. A booking confirmation email will be dispatched to your account immediately.
+              </p>
 
               <button
                 type="submit"
@@ -324,7 +249,7 @@ const Booking = () => {
                 style={{ width: '100%', justifyContent: 'center', height: '48px' }}
                 disabled={payLoading}
               >
-                {payLoading ? 'Authorizing secure transaction...' : `Pay & Secure $${grandTotal.toFixed(2)}`}
+                {payLoading ? 'Processing your reservation...' : 'Confirm & Secure Booking'}
               </button>
             </div>
           </form>

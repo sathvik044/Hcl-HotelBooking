@@ -26,6 +26,10 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final RoomService roomService;
     private final BookingHistoryService bookingHistoryService;
+    private final com.example.hotelbooking.repository.UserRepository userRepository;
+    private final com.example.hotelbooking.repository.HotelRepository hotelRepository;
+    private final com.example.hotelbooking.repository.RoomRepository roomRepository;
+    private final com.example.hotelbooking.service.EmailService emailService;
     
     @Override
     @Transactional
@@ -78,6 +82,34 @@ public class BookingServiceImpl implements BookingService {
         );
         
         log.info("Booking created with id: {}", savedBooking.getId());
+        
+        // Auto-trigger booking confirmation email in a background thread to prevent SMTP blocking
+        try {
+            new Thread(() -> {
+                try {
+                    com.example.hotelbooking.entity.User user = userRepository.findById(savedBooking.getUserId()).orElse(null);
+                    com.example.hotelbooking.entity.Hotel hotel = hotelRepository.findById(savedBooking.getHotelId()).orElse(null);
+                    com.example.hotelbooking.entity.Room room = roomRepository.findById(savedBooking.getRoomId()).orElse(null);
+                    
+                    if (user != null && hotel != null && room != null) {
+                        emailService.sendBookingConfirmationEmail(
+                            user.getEmail(),
+                            user.getName(),
+                            hotel.getName(),
+                            room.getRoomType().name(),
+                            savedBooking.getCheckInDate().toString(),
+                            savedBooking.getCheckOutDate().toString(),
+                            savedBooking.getId()
+                        );
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to load details for booking confirmation email: {}", ex.getMessage());
+                }
+            }).start();
+        } catch (Exception ex) {
+            log.warn("Failed to dispatch booking confirmation email thread: {}", ex.getMessage());
+        }
+        
         return mapToResponse(savedBooking);
     }
     
@@ -151,6 +183,30 @@ public class BookingServiceImpl implements BookingService {
         bookingHistoryService.recordCancellation(bookingId, booking.getUserId());
         
         log.info("Booking cancelled with id: {}", bookingId);
+        
+        // Auto-trigger cancellation email in a background thread to prevent SMTP blocking
+        try {
+            new Thread(() -> {
+                try {
+                    com.example.hotelbooking.entity.User user = userRepository.findById(updatedBooking.getUserId()).orElse(null);
+                    com.example.hotelbooking.entity.Hotel hotel = hotelRepository.findById(updatedBooking.getHotelId()).orElse(null);
+                    
+                    if (user != null && hotel != null) {
+                        emailService.sendCancellationEmail(
+                            user.getEmail(),
+                            user.getName(),
+                            updatedBooking.getId(),
+                            hotel.getName()
+                        );
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to load details for cancellation email: {}", ex.getMessage());
+                }
+            }).start();
+        } catch (Exception ex) {
+            log.warn("Failed to dispatch cancellation email thread: {}", ex.getMessage());
+        }
+        
         return mapToResponse(updatedBooking);
     }
     

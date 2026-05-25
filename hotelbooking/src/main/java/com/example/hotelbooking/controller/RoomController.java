@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -16,9 +17,9 @@ public class RoomController {
     private final RoomService roomService;
     
     @GetMapping("/hotel/{hotelId}")
-    public ResponseEntity<RoomResponse> getRoomsByHotelId(@PathVariable Long hotelId) {
+    public ResponseEntity<List<RoomResponse>> getRoomsByHotelId(@PathVariable Long hotelId) {
         log.info("GET request to get rooms by hotelId: {}", hotelId);
-        RoomResponse response = roomService.getRoomsByHotelId(hotelId);
+        List<RoomResponse> response = roomService.getAllRoomsByHotelId(hotelId);
         return ResponseEntity.ok(response);
     }
     

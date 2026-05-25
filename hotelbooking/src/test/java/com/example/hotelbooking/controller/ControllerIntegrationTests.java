@@ -245,8 +245,8 @@ public class ControllerIntegrationTests {
         mockMvc.perform(get("/api/rooms/hotel/" + hotelId)
                         .header("Authorization", userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(roomId))
-                .andExpect(jsonPath("$.hotelId").value(hotelId));
+                .andExpect(jsonPath("$[0].id").value(roomId))
+                .andExpect(jsonPath("$[0].hotelId").value(hotelId));
     }
 
     @Test
