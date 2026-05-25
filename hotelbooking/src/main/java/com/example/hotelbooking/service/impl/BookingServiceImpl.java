@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.example.hotelbooking.enums.BookingStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ public class BookingServiceImpl implements BookingService {
         // Check room availability
         boolean isAvailable = !bookingRepository.existsByRoomIdAndStatusAndCheckInDateLessThanAndCheckOutDateGreaterThan(
             request.getRoomId(),
-            Booking.BookingStatus.CONFIRMED,
+            BookingStatus.CONFIRMED,
             request.getCheckOutDate(),
             request.getCheckInDate()
         );
@@ -59,7 +60,7 @@ public class BookingServiceImpl implements BookingService {
             .numberOfRooms(request.getNumberOfRooms())
             .numberOfGuests(request.getNumberOfGuests())
             .totalPrice(totalPrice)
-            .status(Booking.BookingStatus.CONFIRMED)
+            .status(BookingStatus.CONFIRMED)
             .specialRequests(request.getSpecialRequests())
             .build();
         
@@ -134,13 +135,13 @@ public class BookingServiceImpl implements BookingService {
                 return new BookingNotFoundException(bookingId);
             });
         
-        if (booking.getStatus() == Booking.BookingStatus.CANCELLED) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
             log.error("Booking is already cancelled with id: {}", bookingId);
             throw new BookingNotFoundException("Booking is already cancelled: " + bookingId);
         }
         
         // Update booking status
-        booking.setStatus(Booking.BookingStatus.CANCELLED);
+        booking.setStatus(BookingStatus.CANCELLED);
         Booking updatedBooking = bookingRepository.save(booking);
         
         // Update room availability
@@ -164,7 +165,7 @@ public class BookingServiceImpl implements BookingService {
             .numberOfRooms(booking.getNumberOfRooms())
             .numberOfGuests(booking.getNumberOfGuests())
             .totalPrice(booking.getTotalPrice())
-            .status(booking.getStatus().toString())
+            .status(booking.getStatus())
             .specialRequests(booking.getSpecialRequests())
             .createdAt(booking.getCreatedAt())
             .updatedAt(booking.getUpdatedAt())

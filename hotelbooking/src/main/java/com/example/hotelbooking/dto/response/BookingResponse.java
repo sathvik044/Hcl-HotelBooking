@@ -1,6 +1,6 @@
 package com.example.hotelbooking.dto.response;
 
-import com.example.hotelbooking.entity.Booking;
+import com.example.hotelbooking.enums.BookingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +33,7 @@ public class BookingResponse {
     
     private BigDecimal totalPrice;
     
-    private String status;
+    private BookingStatus status;
     
     private String specialRequests;
     

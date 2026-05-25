@@ -4,6 +4,7 @@ import com.example.hotelbooking.dto.request.RoomCreateRequest;
 import com.example.hotelbooking.dto.request.RoomUpdateRequest;
 import com.example.hotelbooking.dto.response.RoomResponse;
 import com.example.hotelbooking.entity.Room;
+import com.example.hotelbooking.enums.RoomType;
 import com.example.hotelbooking.exception.RoomNotFoundException;
 import com.example.hotelbooking.exception.RoomUnavailableException;
 import com.example.hotelbooking.repository.RoomRepository;
@@ -66,7 +67,7 @@ public class RoomServiceImpl implements RoomService {
         
         Room room = Room.builder()
             .hotelId(request.getHotelId())
-            .roomType(request.getRoomType())
+            .roomType(RoomType.valueOf(request.getRoomType().toUpperCase()))
             .capacity(request.getCapacity())
             .pricePerNight(request.getPricePerNight())
             .description(request.getDescription())
@@ -93,7 +94,7 @@ public class RoomServiceImpl implements RoomService {
             });
         
         if (request.getRoomType() != null) {
-            room.setRoomType(request.getRoomType());
+            room.setRoomType(RoomType.valueOf(request.getRoomType().toUpperCase()));
         }
         if (request.getCapacity() != null) {
             room.setCapacity(request.getCapacity());

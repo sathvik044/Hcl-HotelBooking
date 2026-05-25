@@ -1,5 +1,6 @@
 package com.example.hotelbooking.dto.response;
 
+import com.example.hotelbooking.enums.RoomType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,7 @@ public class RoomResponse {
     
     private Long hotelId;
     
-    private String roomType;
+    private RoomType roomType;
     
     private Integer capacity;
     

@@ -1,5 +1,6 @@
 package com.example.hotelbooking.entity;
 
+import com.example.hotelbooking.enums.RoomType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,8 @@ public class Room {
     private Long hotelId;
     
     @Column(nullable = false)
-    private String roomType;
+    @Enumerated(EnumType.STRING)
+    private RoomType roomType;
     
     @Column(nullable = false)
     private Integer capacity;
@@ -45,7 +47,7 @@ public class Room {
     private Integer availableRooms;
     
     @Column(nullable = false)
-    private Boolean isActive = true;
+    private Boolean isActive;
     
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

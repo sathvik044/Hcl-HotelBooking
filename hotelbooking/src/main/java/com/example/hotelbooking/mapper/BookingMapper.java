@@ -3,6 +3,7 @@ package com.example.hotelbooking.mapper;
 import com.example.hotelbooking.dto.request.BookingCreateRequest;
 import com.example.hotelbooking.dto.response.BookingResponse;
 import com.example.hotelbooking.entity.Booking;
+import com.example.hotelbooking.enums.BookingStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,7 +24,7 @@ public class BookingMapper {
             .numberOfRooms(booking.getNumberOfRooms())
             .numberOfGuests(booking.getNumberOfGuests())
             .totalPrice(booking.getTotalPrice())
-            .status(booking.getStatus().toString())
+            .status(booking.getStatus())
             .specialRequests(booking.getSpecialRequests())
             .createdAt(booking.getCreatedAt())
             .updatedAt(booking.getUpdatedAt())
@@ -44,7 +45,7 @@ public class BookingMapper {
             .numberOfRooms(request.getNumberOfRooms())
             .numberOfGuests(request.getNumberOfGuests())
             .specialRequests(request.getSpecialRequests())
-            .status(Booking.BookingStatus.CONFIRMED)
+            .status(BookingStatus.PENDING)
             .build();
     }
 }

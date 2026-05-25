@@ -1,5 +1,6 @@
 package com.example.hotelbooking.entity;
 
+import com.example.hotelbooking.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,7 +48,8 @@ public class Booking {
     
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private BookingStatus status = BookingStatus.CONFIRMED;
+    @Builder.Default
+    private BookingStatus status = BookingStatus.PENDING;
     
     @Column(columnDefinition = "TEXT")
     private String specialRequests;
@@ -67,9 +69,5 @@ public class Booking {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-    
-    public enum BookingStatus {
-        CONFIRMED, COMPLETED, CANCELLED
     }
 }

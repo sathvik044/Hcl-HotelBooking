@@ -3,6 +3,7 @@ package com.example.hotelbooking.mapper;
 import com.example.hotelbooking.dto.request.RoomCreateRequest;
 import com.example.hotelbooking.dto.response.RoomResponse;
 import com.example.hotelbooking.entity.Room;
+import com.example.hotelbooking.enums.RoomType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,7 +37,7 @@ public class RoomMapper {
         
         return Room.builder()
             .hotelId(request.getHotelId())
-            .roomType(request.getRoomType())
+            .roomType(RoomType.valueOf(request.getRoomType().toUpperCase()))
             .capacity(request.getCapacity())
             .pricePerNight(request.getPricePerNight())
             .description(request.getDescription())
