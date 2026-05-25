@@ -9,6 +9,7 @@ import com.example.hotelbooking.exception.RoomNotFoundException;
 import com.example.hotelbooking.exception.RoomUnavailableException;
 import com.example.hotelbooking.repository.RoomRepository;
 import com.example.hotelbooking.service.RoomService;
+import com.example.hotelbooking.mapper.RoomMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,25 +23,29 @@ import java.util.stream.Collectors;
 public class RoomServiceImpl implements RoomService {
     
     private final RoomRepository roomRepository;
+    private final RoomMapper roomMapper;
     
     @Override
     public RoomResponse getRoomsByHotelId(Long hotelId) {
-        log.info("Getting room by hotelId: {}", hotelId);
-        List<Room> rooms = roomRepository.findByHotelIdAndIsActiveTrue(hotelId);
+        log.info("Getting active available room by hotelId: {}", hotelId);
+        List<Room> rooms = roomRepository.findByHotelIdAndIsActiveTrue(hotelId).stream()
+            .filter(room -> room.getAvailableRooms() > 0)
+            .collect(Collectors.toList());
         if (rooms.isEmpty()) {
-            log.warn("No active rooms found for hotelId: {}", hotelId);
-            throw new RoomNotFoundException("No rooms found for hotel: " + hotelId);
+            log.warn("No active available rooms found for hotelId: {}", hotelId);
+            throw new RoomNotFoundException("No active available rooms found for hotel: " + hotelId);
         }
         Room room = rooms.get(0);
-        return mapToResponse(room);
+        return roomMapper.toResponse(room);
     }
     
     @Override
     public List<RoomResponse> getAllRoomsByHotelId(Long hotelId) {
-        log.info("Getting all rooms by hotelId: {}", hotelId);
+        log.info("Getting all active available rooms by hotelId: {}", hotelId);
         return roomRepository.findByHotelIdAndIsActiveTrue(hotelId)
             .stream()
-            .map(this::mapToResponse)
+            .filter(room -> room.getAvailableRooms() > 0)
+            .map(roomMapper::toResponse)
             .collect(Collectors.toList());
     }
     
@@ -57,7 +62,7 @@ public class RoomServiceImpl implements RoomService {
             log.error("Room is inactive with id: {}", roomId);
             throw new RoomNotFoundException("Room is not active: " + roomId);
         }
-        return mapToResponse(room);
+        return roomMapper.toResponse(room);
     }
     
     @Override
@@ -65,21 +70,11 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponse createRoom(RoomCreateRequest request) {
         log.info("Creating new room for hotelId: {}", request.getHotelId());
         
-        Room room = Room.builder()
-            .hotelId(request.getHotelId())
-            .roomType(RoomType.valueOf(request.getRoomType().toUpperCase()))
-            .capacity(request.getCapacity())
-            .pricePerNight(request.getPricePerNight())
-            .description(request.getDescription())
-            .amenities(request.getAmenities())
-            .totalRooms(request.getTotalRooms())
-            .availableRooms(request.getTotalRooms())
-            .isActive(true)
-            .build();
+        Room room = roomMapper.toEntity(request);
         
         Room savedRoom = roomRepository.save(room);
         log.info("Room created with id: {}", savedRoom.getId());
-        return mapToResponse(savedRoom);
+        return roomMapper.toResponse(savedRoom);
     }
     
     @Override
@@ -93,34 +88,11 @@ public class RoomServiceImpl implements RoomService {
                 return new RoomNotFoundException(roomId);
             });
         
-        if (request.getRoomType() != null) {
-            room.setRoomType(RoomType.valueOf(request.getRoomType().toUpperCase()));
-        }
-        if (request.getCapacity() != null) {
-            room.setCapacity(request.getCapacity());
-        }
-        if (request.getPricePerNight() != null) {
-            room.setPricePerNight(request.getPricePerNight());
-        }
-        if (request.getDescription() != null) {
-            room.setDescription(request.getDescription());
-        }
-        if (request.getAmenities() != null) {
-            room.setAmenities(request.getAmenities());
-        }
-        if (request.getTotalRooms() != null) {
-            room.setTotalRooms(request.getTotalRooms());
-        }
-        if (request.getAvailableRooms() != null) {
-            room.setAvailableRooms(request.getAvailableRooms());
-        }
-        if (request.getIsActive() != null) {
-            room.setIsActive(request.getIsActive());
-        }
+        roomMapper.updateEntity(request, room);
         
         Room updatedRoom = roomRepository.save(room);
         log.info("Room updated with id: {}", updatedRoom.getId());
-        return mapToResponse(updatedRoom);
+        return roomMapper.toResponse(updatedRoom);
     }
     
     @Override
@@ -164,22 +136,5 @@ public class RoomServiceImpl implements RoomService {
         
         roomRepository.save(room);
         log.info("Available rooms updated for roomId: {}", roomId);
-    }
-    
-    private RoomResponse mapToResponse(Room room) {
-        return RoomResponse.builder()
-            .id(room.getId())
-            .hotelId(room.getHotelId())
-            .roomType(room.getRoomType())
-            .capacity(room.getCapacity())
-            .pricePerNight(room.getPricePerNight())
-            .description(room.getDescription())
-            .amenities(room.getAmenities())
-            .totalRooms(room.getTotalRooms())
-            .availableRooms(room.getAvailableRooms())
-            .isActive(room.getIsActive())
-            .createdAt(room.getCreatedAt())
-            .updatedAt(room.getUpdatedAt())
-            .build();
     }
 }

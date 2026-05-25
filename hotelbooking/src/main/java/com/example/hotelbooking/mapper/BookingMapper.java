@@ -48,4 +48,23 @@ public class BookingMapper {
             .status(BookingStatus.PENDING)
             .build();
     }
+
+    public Booking toEntity(BookingCreateRequest request, java.math.BigDecimal totalPrice, BookingStatus status) {
+        if (request == null) {
+            return null;
+        }
+
+        return Booking.builder()
+            .userId(request.getUserId())
+            .roomId(request.getRoomId())
+            .hotelId(request.getHotelId())
+            .checkInDate(request.getCheckInDate())
+            .checkOutDate(request.getCheckOutDate())
+            .numberOfRooms(request.getNumberOfRooms())
+            .numberOfGuests(request.getNumberOfGuests())
+            .totalPrice(totalPrice)
+            .status(status)
+            .specialRequests(request.getSpecialRequests())
+            .build();
+    }
 }

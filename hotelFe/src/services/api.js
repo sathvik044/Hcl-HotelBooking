@@ -314,7 +314,18 @@ const handleServiceCall = async (apiCall, mockHandler) => {
     const response = await apiCall();
     return ensureAmenitiesAsArray(response.data);
   } catch (error) {
-    console.warn('API call failed, falling back to LocalStorage Mock DB:', error);
+    // Check if the backend responded with an error (e.g. 400 Bad Request, 401, 404, 500)
+    if (error.response && error.response.data) {
+      const errMsg = error.response.data.message || error.response.data.error || 'Server error occurred';
+      console.error('API responded with error payload:', errMsg);
+      const customErr = new Error(errMsg);
+      customErr.errorCode = error.response.data.errorCode;
+      customErr.status = error.response.data.status;
+      throw customErr;
+    }
+    
+    // Only fall back to local mock storage in case of real network connection errors
+    console.warn('API call failed due to network, falling back to LocalStorage Mock DB:', error);
     return ensureAmenitiesAsArray(mockHandler());
   }
 };

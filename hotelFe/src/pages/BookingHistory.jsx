@@ -25,6 +25,7 @@ const BookingHistory = () => {
       setBookings(sorted);
     } catch (err) {
       console.error('Failed to load user bookings:', err);
+      showAlert(err.message || 'Failed to load your bookings. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

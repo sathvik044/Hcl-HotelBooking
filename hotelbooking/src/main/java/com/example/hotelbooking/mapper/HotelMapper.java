@@ -4,10 +4,12 @@ import com.example.hotelbooking.entity.Hotel;
 import com.example.hotelbooking.dto.response.HotelResponse;
 import com.example.hotelbooking.dto.request.HotelCreateRequest;
 import com.example.hotelbooking.dto.request.HotelUpdateRequest;
+import org.springframework.stereotype.Component;
 
+@Component
 public class HotelMapper {
 
-    public static HotelResponse toResponse(Hotel hotel) {
+    public HotelResponse toResponse(Hotel hotel) {
         if (hotel == null) {
             return null;
         }
@@ -24,7 +26,7 @@ public class HotelMapper {
                 .build();
     }
 
-    public static Hotel toEntity(HotelCreateRequest request) {
+    public Hotel toEntity(HotelCreateRequest request) {
         if (request == null) {
             return null;
         }
@@ -44,7 +46,7 @@ public class HotelMapper {
                 .build();
     }
 
-    public static void updateEntity(HotelUpdateRequest request, Hotel hotel) {
+    public void updateEntity(HotelUpdateRequest request, Hotel hotel) {
         if (request == null || hotel == null) {
             return;
         }

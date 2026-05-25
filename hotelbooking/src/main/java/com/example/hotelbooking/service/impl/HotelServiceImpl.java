@@ -23,13 +23,14 @@ import java.util.stream.Collectors;
 public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
+    private final HotelMapper hotelMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<HotelResponse> getAllHotels() {
         log.info("Fetching all hotels from the database");
         return hotelRepository.findAll().stream()
-                .map(HotelMapper::toResponse)
+                .map(hotelMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -42,7 +43,7 @@ public class HotelServiceImpl implements HotelService {
                     log.warn("Hotel search failed. ID: {} not found", id);
                     return new HotelNotFoundException("Hotel with ID " + id + " not found");
                 });
-        return HotelMapper.toResponse(hotel);
+        return hotelMapper.toResponse(hotel);
     }
 
     @Override
@@ -54,17 +55,17 @@ public class HotelServiceImpl implements HotelService {
             return getAllHotels();
         }
         return hotelRepository.searchHotels(query).stream()
-                .map(HotelMapper::toResponse)
+                .map(hotelMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public HotelResponse createHotel(HotelCreateRequest request) {
         log.info("Creating a new hotel: {}", request.getName());
-        Hotel hotel = HotelMapper.toEntity(request);
+        Hotel hotel = hotelMapper.toEntity(request);
         Hotel savedHotel = hotelRepository.save(hotel);
         log.info("Successfully created hotel '{}' with ID: {}", savedHotel.getName(), savedHotel.getId());
-        return HotelMapper.toResponse(savedHotel);
+        return hotelMapper.toResponse(savedHotel);
     }
 
     @Override
@@ -76,10 +77,10 @@ public class HotelServiceImpl implements HotelService {
                     return new HotelNotFoundException("Hotel with ID " + id + " not found");
                 });
 
-        HotelMapper.updateEntity(request, hotel);
+        hotelMapper.updateEntity(request, hotel);
         Hotel updatedHotel = hotelRepository.save(hotel);
         log.info("Successfully updated hotel with ID: {}", updatedHotel.getId());
-        return HotelMapper.toResponse(updatedHotel);
+        return hotelMapper.toResponse(updatedHotel);
     }
 
     @Override

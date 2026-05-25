@@ -5,6 +5,7 @@ import com.example.hotelbooking.dto.request.RegisterRequest;
 import com.example.hotelbooking.dto.response.AuthResponse;
 import com.example.hotelbooking.enums.UserRole;
 import com.example.hotelbooking.exception.AuthException;
+import com.example.hotelbooking.mapper.UserMapper;
 import com.example.hotelbooking.repository.UserRepository;
 import com.example.hotelbooking.security.CustomUserDetailsService;
 import com.example.hotelbooking.security.JwtUtil;
@@ -30,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final com.example.hotelbooking.service.EmailService emailService;
+    private final com.example.hotelbooking.mapper.UserMapper userMapper;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -43,22 +45,16 @@ public class AuthServiceImpl implements AuthService {
             role = UserRole.ADMIN;
         }
 
-        com.example.hotelbooking.entity.User userEntity = com.example.hotelbooking.entity.User.builder()
-                .email(request.getEmail())
-                .name(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .blocked(false)
-                .build();
+        com.example.hotelbooking.entity.User userEntity = userMapper.toEntity(
+                request, 
+                passwordEncoder.encode(request.getPassword()), 
+                role
+        );
 
         userRepository.save(userEntity);
 
-        // Also save user to in-memory details fallback
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(request.getEmail())
-                .password(userEntity.getPassword())
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name())))
-                .build();
+        // Also save user to in-memory details fallback using mapper
+        UserDetails userDetails = userMapper.toUserDetails(userEntity);
 
         userDetailsService.saveUser(userDetails);
         

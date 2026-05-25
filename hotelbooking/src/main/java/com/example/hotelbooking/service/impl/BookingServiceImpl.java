@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.example.hotelbooking.enums.BookingStatus;
+import com.example.hotelbooking.mapper.BookingMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class BookingServiceImpl implements BookingService {
     private final com.example.hotelbooking.repository.HotelRepository hotelRepository;
     private final com.example.hotelbooking.repository.RoomRepository roomRepository;
     private final com.example.hotelbooking.service.EmailService emailService;
+    private final BookingMapper bookingMapper;
     
     @Override
     @Transactional
@@ -54,19 +56,8 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal pricePerNight = roomService.getRoomById(request.getRoomId()).getPricePerNight();
         BigDecimal totalPrice = pricePerNight.multiply(BigDecimal.valueOf(days * request.getNumberOfRooms()));
         
-        // Create booking
-        Booking booking = Booking.builder()
-            .userId(request.getUserId())
-            .roomId(request.getRoomId())
-            .hotelId(request.getHotelId())
-            .checkInDate(request.getCheckInDate())
-            .checkOutDate(request.getCheckOutDate())
-            .numberOfRooms(request.getNumberOfRooms())
-            .numberOfGuests(request.getNumberOfGuests())
-            .totalPrice(totalPrice)
-            .status(BookingStatus.CONFIRMED)
-            .specialRequests(request.getSpecialRequests())
-            .build();
+        // Create booking using mapper
+        Booking booking = bookingMapper.toEntity(request, totalPrice, BookingStatus.CONFIRMED);
         
         Booking savedBooking = bookingRepository.save(booking);
         
@@ -110,7 +101,7 @@ public class BookingServiceImpl implements BookingService {
             log.warn("Failed to dispatch booking confirmation email thread: {}", ex.getMessage());
         }
         
-        return mapToResponse(savedBooking);
+        return bookingMapper.toResponse(savedBooking);
     }
     
     @Override
@@ -123,7 +114,7 @@ public class BookingServiceImpl implements BookingService {
                 return new BookingNotFoundException(bookingId);
             });
         
-        return mapToResponse(booking);
+        return bookingMapper.toResponse(booking);
     }
     
     @Override
@@ -132,7 +123,7 @@ public class BookingServiceImpl implements BookingService {
         
         return bookingRepository.findByUserId(userId)
             .stream()
-            .map(this::mapToResponse)
+            .map(bookingMapper::toResponse)
             .collect(Collectors.toList());
     }
     
@@ -142,7 +133,7 @@ public class BookingServiceImpl implements BookingService {
         
         return bookingRepository.findAll()
             .stream()
-            .map(this::mapToResponse)
+            .map(bookingMapper::toResponse)
             .collect(Collectors.toList());
     }
     
@@ -152,7 +143,7 @@ public class BookingServiceImpl implements BookingService {
         
         return bookingRepository.findByHotelId(hotelId)
             .stream()
-            .map(this::mapToResponse)
+            .map(bookingMapper::toResponse)
             .collect(Collectors.toList());
     }
     
@@ -207,24 +198,6 @@ public class BookingServiceImpl implements BookingService {
             log.warn("Failed to dispatch cancellation email thread: {}", ex.getMessage());
         }
         
-        return mapToResponse(updatedBooking);
-    }
-    
-    private BookingResponse mapToResponse(Booking booking) {
-        return BookingResponse.builder()
-            .id(booking.getId())
-            .userId(booking.getUserId())
-            .roomId(booking.getRoomId())
-            .hotelId(booking.getHotelId())
-            .checkInDate(booking.getCheckInDate())
-            .checkOutDate(booking.getCheckOutDate())
-            .numberOfRooms(booking.getNumberOfRooms())
-            .numberOfGuests(booking.getNumberOfGuests())
-            .totalPrice(booking.getTotalPrice())
-            .status(booking.getStatus())
-            .specialRequests(booking.getSpecialRequests())
-            .createdAt(booking.getCreatedAt())
-            .updatedAt(booking.getUpdatedAt())
-            .build();
+        return bookingMapper.toResponse(updatedBooking);
     }
 }

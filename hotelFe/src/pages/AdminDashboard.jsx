@@ -147,7 +147,7 @@ const AdminDashboard = () => {
       setHotelFormOpen(false);
       fetchAdminData();
     } catch (err) {
-      showAlert('Hotel submission failed.', 'error');
+      showAlert(err.message || 'Hotel submission failed.', 'error');
     }
   };
 
@@ -160,7 +160,7 @@ const AdminDashboard = () => {
       showAlert('Hotel successfully deleted.', 'info');
       fetchAdminData();
     } catch (err) {
-      showAlert('Delete failed.', 'error');
+      showAlert(err.message || 'Hotel deletion failed.', 'error');
     }
   };
 
@@ -215,7 +215,7 @@ const AdminDashboard = () => {
       setRoomFormOpen(false);
       fetchAdminData();
     } catch (err) {
-      showAlert('Room submission failed.', 'error');
+      showAlert(err.message || 'Room submission failed.', 'error');
     }
   };
 
@@ -228,7 +228,7 @@ const AdminDashboard = () => {
       showAlert('Room successfully deleted.', 'info');
       fetchAdminData();
     } catch (err) {
-      showAlert('Delete failed.', 'error');
+      showAlert(err.message || 'Room deletion failed.', 'error');
     }
   };
 
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
       showAlert('Booking administratively cancelled.', 'success');
       fetchAdminData();
     } catch (err) {
-      showAlert('Override cancellation failed.', 'error');
+      showAlert(err.message || 'Booking cancellation failed.', 'error');
     }
   };
 

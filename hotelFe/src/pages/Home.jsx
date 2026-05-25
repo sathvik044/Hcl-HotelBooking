@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { hotelService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/SearchBar';
 import HotelCard from '../components/HotelCard';
 import Loader from '../components/Loader';
@@ -10,6 +11,7 @@ const Home = () => {
   const [featuredHotels, setFeaturedHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { showAlert } = useAuth();
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -18,6 +20,7 @@ const Home = () => {
         setFeaturedHotels(hotels.slice(0, 3)); // Display top 3 hotels
       } catch (err) {
         console.error('Failed to fetch hotels:', err);
+        showAlert(err.message || 'Failed to load featured hotels. Please refresh.', 'error');
       } finally {
         setLoading(false);
       }

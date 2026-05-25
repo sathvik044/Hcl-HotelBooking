@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { hotelService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/SearchBar';
 import HotelCard from '../components/HotelCard';
 import Loader from '../components/Loader';
@@ -10,6 +11,7 @@ const HotelListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { showAlert } = useAuth();
 
   // Filter States
   const [priceRange, setPriceRange] = useState(1000); // Max budget
@@ -41,6 +43,7 @@ const HotelListing = () => {
         setHotels(results);
       } catch (err) {
         console.error('Failed to search hotels:', err);
+        showAlert(err.message || 'Failed to search hotels. Please try again.', 'error');
       } finally {
         setLoading(false);
       }
