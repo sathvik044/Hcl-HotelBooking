@@ -1,16 +1,17 @@
 package com.example.hotelbooking.mapper;
 
-import com.example.hotelbooking.entity.Hotel;
-import com.example.hotelbooking.dto.response.HotelResponse;
 import com.example.hotelbooking.dto.request.HotelCreateRequest;
 import com.example.hotelbooking.dto.request.HotelUpdateRequest;
+import com.example.hotelbooking.dto.response.HotelResponse;
+import com.example.hotelbooking.entity.Hotel;
 
 public class HotelMapper {
 
+    private HotelMapper() {
+        // Utility class — prevent instantiation
+    }
+
     public static HotelResponse toResponse(Hotel hotel) {
-        if (hotel == null) {
-            return null;
-        }
         return HotelResponse.builder()
                 .id(hotel.getId())
                 .name(hotel.getName())
@@ -24,9 +25,6 @@ public class HotelMapper {
     }
 
     public static Hotel toEntity(HotelCreateRequest request) {
-        if (request == null) {
-            return null;
-        }
         return Hotel.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -39,29 +37,12 @@ public class HotelMapper {
     }
 
     public static void updateEntity(HotelUpdateRequest request, Hotel hotel) {
-        if (request == null || hotel == null) {
-            return;
-        }
-        if (request.getName() != null) {
-            hotel.setName(request.getName());
-        }
-        if (request.getDescription() != null) {
-            hotel.setDescription(request.getDescription());
-        }
-        if (request.getLocation() != null) {
-            hotel.setLocation(request.getLocation());
-        }
-        if (request.getAddress() != null) {
-            hotel.setAddress(request.getAddress());
-        }
-        if (request.getCity() != null) {
-            hotel.setCity(request.getCity());
-        }
-        if (request.getAmenities() != null) {
-            hotel.setAmenities(request.getAmenities());
-        }
-        if (request.getRating() != null) {
-            hotel.setRating(request.getRating());
-        }
+        java.util.Optional.ofNullable(request.getName()).ifPresent(hotel::setName);
+        java.util.Optional.ofNullable(request.getDescription()).ifPresent(hotel::setDescription);
+        java.util.Optional.ofNullable(request.getLocation()).ifPresent(hotel::setLocation);
+        java.util.Optional.ofNullable(request.getAddress()).ifPresent(hotel::setAddress);
+        java.util.Optional.ofNullable(request.getCity()).ifPresent(hotel::setCity);
+        java.util.Optional.ofNullable(request.getAmenities()).ifPresent(hotel::setAmenities);
+        java.util.Optional.ofNullable(request.getRating()).ifPresent(hotel::setRating);
     }
 }

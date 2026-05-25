@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,23 +38,19 @@ public class HotelServiceImpl implements HotelService {
     @Transactional(readOnly = true)
     public HotelResponse getHotelById(Long id) {
         log.info("Retrieving hotel with ID: {}", id);
-        Hotel hotel = hotelRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Hotel search failed. ID: {} not found", id);
-                    return new HotelNotFoundException("Hotel with ID " + id + " not found");
-                });
-        return HotelMapper.toResponse(hotel);
+        return hotelRepository.findById(id)
+                .map(HotelMapper::toResponse)
+                .orElseThrow(() -> new HotelNotFoundException("Hotel with ID " + id + " not found"));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<HotelResponse> searchHotels(String query) {
         log.info("Searching hotels with query: '{}'", query);
-        if (query == null || query.trim().isEmpty()) {
-            log.info("Empty query provided. Returning all hotels instead");
-            return getAllHotels();
-        }
-        return hotelRepository.searchHotels(query).stream()
+        List<Hotel> results = StringUtils.hasText(query)
+                ? hotelRepository.searchHotels(query)
+                : hotelRepository.findAll();
+        return results.stream()
                 .map(HotelMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -61,8 +58,7 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public HotelResponse createHotel(HotelCreateRequest request) {
         log.info("Creating a new hotel: {}", request.getName());
-        Hotel hotel = HotelMapper.toEntity(request);
-        Hotel savedHotel = hotelRepository.save(hotel);
+        Hotel savedHotel = hotelRepository.save(HotelMapper.toEntity(request));
         log.info("Successfully created hotel '{}' with ID: {}", savedHotel.getName(), savedHotel.getId());
         return HotelMapper.toResponse(savedHotel);
     }
@@ -71,11 +67,7 @@ public class HotelServiceImpl implements HotelService {
     public HotelResponse updateHotel(Long id, HotelUpdateRequest request) {
         log.info("Updating hotel with ID: {}", id);
         Hotel hotel = hotelRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Hotel update failed. ID: {} not found", id);
-                    return new HotelNotFoundException("Hotel with ID " + id + " not found");
-                });
-
+                .orElseThrow(() -> new HotelNotFoundException("Hotel with ID " + id + " not found"));
         HotelMapper.updateEntity(request, hotel);
         Hotel updatedHotel = hotelRepository.save(hotel);
         log.info("Successfully updated hotel with ID: {}", updatedHotel.getId());
@@ -86,11 +78,7 @@ public class HotelServiceImpl implements HotelService {
     public void deleteHotel(Long id) {
         log.info("Deleting hotel with ID: {}", id);
         Hotel hotel = hotelRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Hotel deletion failed. ID: {} not found", id);
-                    return new HotelNotFoundException("Hotel with ID " + id + " not found");
-                });
-
+                .orElseThrow(() -> new HotelNotFoundException("Hotel with ID " + id + " not found"));
         hotelRepository.delete(hotel);
         log.info("Successfully deleted hotel with ID: {}", id);
     }

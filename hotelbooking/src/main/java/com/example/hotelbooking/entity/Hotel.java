@@ -2,8 +2,6 @@ package com.example.hotelbooking.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "hotels")
@@ -36,8 +34,4 @@ public class Hotel {
     private String amenities; // Comma separated list of amenities
 
     private Double rating;
-
-    @Builder.Default
-    @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Room> rooms = new ArrayList<>();
 }

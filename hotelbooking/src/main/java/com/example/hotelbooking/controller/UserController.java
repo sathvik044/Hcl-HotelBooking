@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,11 +21,7 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-     * GET /api/users/me
-     * Returns the profile of the currently authenticated user.
-     * Spring Security injects the logged-in UserDetails via @AuthenticationPrincipal.
-     */
+   
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMe(@AuthenticationPrincipal UserDetails userDetails) {
         log.info("GET /api/users/me invoked for user: {}", userDetails.getUsername());
@@ -33,10 +29,6 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
-    /**
-     * PUT /api/users/{id}
-     * Updates the profile of the user identified by the given ID.
-     */
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
@@ -46,5 +38,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    
+   
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFound(UserNotFoundException ex) {
+        log.warn("UserController - user not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 }
